@@ -1,76 +1,65 @@
---first prompt
-CREATE DATABASE Animales;
+-- Crear la base de datos
+CREATE DATABASE Moovit_Nica;
 
+-- Seleccionar la base de datos
+USE Moovit_Nica;
 
----Second prompt
--- Create the database
-CREATE DATABASE Animales;
-
--- Use the database
-USE Animales;
-
--- Create the Especie table
-CREATE TABLE Especie (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Nombre_de_especie VARCHAR(100) NOT NULL,
-    Descripcion TEXT
+-- Crear la tabla Rutas
+CREATE TABLE Rutas (
+    placa VARCHAR(10) PRIMARY KEY,
+    numero_de_placa VARCHAR(20) NOT NULL,
+    Terminal_1 VARCHAR(100) NOT NULL,
+    Terminal_2 VARCHAR(100) NOT NULL,
+    Detalles TEXT
 );
 
--- Create the Habitad table
-CREATE TABLE Habitad (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Nombre_de_habitad VARCHAR(100) NOT NULL,
-    Detalle_de_habitad TEXT
+-- Crear la tabla Parada_de_bus
+CREATE TABLE Parada_de_bus (
+    ID_parada INT AUTO_INCREMENT PRIMARY KEY,
+    Barrio VARCHAR(100) NOT NULL,
+    Coordenadas_map VARCHAR(100) NOT NULL,
+    Detalles TEXT
 );
 
--- Create the Animales table
-CREATE TABLE Animales (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Nombre VARCHAR(100) NOT NULL,
-    Cantidad_de_patas INT,
-    Especie_ID INT,
-    Habitad_ID INT,
-    FOREIGN KEY (Especie_ID) REFERENCES Especie(ID),
-    FOREIGN KEY (Habitad_ID) REFERENCES Habitad(ID)
+-- Crear la tabla Horario
+CREATE TABLE Horario (
+    ID_horario INT AUTO_INCREMENT PRIMARY KEY,
+    ruta VARCHAR(10),
+    Parada INT,
+    Hora TIME NOT NULL,
+    FOREIGN KEY (ruta) REFERENCES Rutas(placa),
+    FOREIGN KEY (Parada) REFERENCES Parada_de_bus(ID_parada)
 );
 
+-- Generar el CRUD para la tabla Rutas
+-- Crear (Insertar)
+INSERT INTO Rutas (placa, numero_de_placa, Terminal_1, Terminal_2, Detalles)
+VALUES ('123ABC', '456DEF', 'Terminal Norte', 'Terminal Sur', 'Detalles de la ruta');
 
+-- Leer (Seleccionar)
+SELECT * FROM Rutas;
 
---third prompt
-DELIMITER //
+-- Actualizar
+UPDATE Rutas
+SET numero_de_placa = '789GHI', Terminal_1 = 'Terminal Este', Terminal_2 = 'Terminal Oeste', Detalles = 'Detalles actualizados de la ruta'
+WHERE placa = '123ABC';
 
--- Create the stored procedure
-CREATE PROCEDURE ListAllRecords()
-BEGIN
-    -- Create a temporary table to store the results
-    CREATE TEMPORARY TABLE TempResults (
-        AnimalID INT,
-        AnimalName VARCHAR(100),
-        Patas INT,
-        EspecieName VARCHAR(100),
-        HabitadName VARCHAR(100)
-    );
+-- Borrar
+DELETE FROM Rutas
+WHERE placa = '123ABC';
 
-    -- Insert data into the temporary table
-    INSERT INTO TempResults (AnimalID, AnimalName, Patas, EspecieName, HabitadName)
-    SELECT 
-        a.ID, a.Nombre, a.Cantidad_de_patas, 
-        e.Nombre_de_especie, 
-        h.Nombre_de_habitad
-    FROM 
-        Animales a
-    JOIN 
-        Especie e ON a.Especie_ID = e.ID
-    JOIN 
-        Habitad h ON a.Habitad_ID = h.ID
-    ORDER BY 
-        a.ID;
+-- Mostrar los registros de la tabla Parada_de_bus con un INNER JOIN
+SELECT Parada_de_bus.*, Rutas.Detalles AS Detalles_Ruta
+FROM Parada_de_bus
+INNER JOIN Horario ON Parada_de_bus.ID_parada = Horario.Parada
+INNER JOIN Rutas ON Horario.ruta = Rutas.placa;
 
-    -- Select from the temporary table
-    SELECT * FROM TempResults;
+-- Generar una vista para la tabla Horarios
+CREATE VIEW Vista_Horarios AS
+SELECT Horario.ID_horario, Rutas.numero_de_placa, Parada_de_bus.Barrio, Horario.Hora
+FROM Horario
+INNER JOIN Rutas ON Horario.ruta = Rutas.placa
+INNER JOIN Parada_de_bus ON Horario.Parada = Parada_de_bus.ID_parada;
 
-    -- Drop the temporary table
-    DROP TEMPORARY TABLE TempResults;
-END //
-
-DELIMITER ;
+-- Seleccionar desde la vista
+SELECT * FROM Vista_Horarios;
